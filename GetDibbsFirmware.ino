@@ -8,7 +8,8 @@ LightMatrixManager matrix;
 
 void setup() {
 
-  Blynk.begin(auth, "deck5", "pearson#dewitt1");
+  //Blynk.begin(auth, "deck5", "pearson#dewitt1");
+  Blynk.begin(auth, "Catalyze Office", "perpetualimprovement");
   matrix.begin(2);
   matrix.currentWeek = 0;
   matrix.currentDay = 0; // Sunday

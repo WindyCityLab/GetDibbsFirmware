@@ -36,7 +36,7 @@ class LightMatrixManager
     void decrementHour();
     void decrementWeek();
   private:
-    NeoPixelBus _pixels = NeoPixelBus(64,2);
+    NeoPixelBus _pixels = NeoPixelBus(NUMPIXELS,2);
     int _reservation[MAX_WEEKS][NUM_COLUMNS][NUM_ROWS]; // Client number goes in the cell, color is looked up from there
     RgbColor _clientColor[MAX_CLIENTS]; // Client colors
     void setPixel(int8_t day, int8_t hour, RgbColor color);
