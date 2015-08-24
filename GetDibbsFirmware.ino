@@ -2,11 +2,11 @@
 #include "LightMatrixManager.h"
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
-//#include <LiquidTWI2.h>
-//#include <Wire.h>
-//#include <WiFiUdp.h>
-//
-//LiquidTWI2 lcd(0x20);
+#include <LiquidTWI2.h>
+#include <Wire.h>
+#include <WiFiUdp.h>
+
+LiquidTWI2 lcd(0x20);
 
 char blynkAuthCode[] = "ca8de794d7534659b2b4b5c995333f3a";
 LightMatrixManager matrix;
@@ -82,11 +82,15 @@ LightMatrixManager matrix;
 //  }
 //}
 
-  //Blynk.begin(auth, "deck5", "pearson#dewitt1");
-
+void initializeLCD()
+{
+  lcd.setMCPType(LTI_TYPE_MCP23008);
+  lcd.begin(16, 2);
+  lcd.print("GetDibbs V0.1");
+  delay(500);
+}
 void initializeMatrix()
 {
-  matrix.begin(2);
   matrix.currentWeek = 0;
   matrix.currentDay = 0; // Sunday
   matrix.currentHour = 7; // 7am
@@ -102,15 +106,22 @@ void initializeMatrix()
 
   matrix.refreshDisplay();
 }
-void setup() {
-
-//  lcd.setMCPType(LTI_TYPE_MCP23008);
-//  lcd.begin(16, 2);
-  
-//  Blynk.begin(blynkAuthCode, "deck5", "pearson#dewitt1");
+void initializeBlynk()
+{
+  lcd.clear();
+  lcd.print("Blynk Connecting...");
   Blynk.begin(blynkAuthCode, "Catalyze Office", "perpetualimprovement");
-//  getTime();
+  lcd.clear();
+  lcd.print("Connected!");
+}
+void setup() {
   
+  matrix.begin(2);
+//  initializeLCD();
+  initializeBlynk();
+  //  getTime();
+  initializeMatrix();
+
 }
 
 BLYNK_WRITE(5) // Increment Day
