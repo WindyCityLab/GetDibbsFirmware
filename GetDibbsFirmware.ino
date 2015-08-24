@@ -108,16 +108,17 @@ void initializeMatrix()
 }
 void initializeBlynk()
 {
-  lcd.clear();
-  lcd.print("Blynk Connecting...");
+//  lcd.clear();
+//  lcd.print("Blynk Connecting...");
   Blynk.begin(blynkAuthCode, "Catalyze Office", "perpetualimprovement");
-  lcd.clear();
-  lcd.print("Connected!");
+//  lcd.clear();
+//  lcd.print("Connected!");
 }
 void setup() {
   
   matrix.begin(2);
-//  initializeLCD();
+  matrix.clearDisplay();
+  initializeLCD();
   initializeBlynk();
   //  getTime();
   initializeMatrix();
