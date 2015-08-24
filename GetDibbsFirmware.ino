@@ -82,13 +82,10 @@ LightMatrixManager matrix;
 //  }
 //}
 
-<<<<<<< Updated upstream
   //Blynk.begin(auth, "deck5", "pearson#dewitt1");
-  Blynk.begin(auth, "Catalyze Office", "perpetualimprovement");
-=======
+
 void initializeMatrix()
 {
->>>>>>> Stashed changes
   matrix.begin(2);
   matrix.currentWeek = 0;
   matrix.currentDay = 0; // Sunday
@@ -111,7 +108,7 @@ void setup() {
 //  lcd.begin(16, 2);
   
 //  Blynk.begin(blynkAuthCode, "deck5", "pearson#dewitt1");
-  Blynk.begin(blynkAuthCode, "Catalyze Office 2", "perpetualimprovement");
+  Blynk.begin(blynkAuthCode, "Catalyze Office", "perpetualimprovement");
 //  getTime();
   
 }
