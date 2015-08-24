@@ -87,7 +87,7 @@ void initializeLCD()
   lcd.setMCPType(LTI_TYPE_MCP23008);
   lcd.begin(16, 2);
   lcd.print("GetDibbs V0.1");
-  delay(500);
+//  delay(500);
 }
 void initializeMatrix()
 {
@@ -108,11 +108,11 @@ void initializeMatrix()
 }
 void initializeBlynk()
 {
-//  lcd.clear();
-//  lcd.print("Blynk Connecting...");
+  lcd.clear();
+  lcd.print("Blynk Connecting...");
   Blynk.begin(blynkAuthCode, "Catalyze Office", "perpetualimprovement");
-//  lcd.clear();
-//  lcd.print("Connected!");
+  lcd.clear();
+  lcd.print("Connected!");
 }
 void setup() {
   
