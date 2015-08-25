@@ -39,6 +39,7 @@ class LightMatrixManager
     void decrementWeek();
 
     void setDay(int day);
+    int getDay();
     
   private:
     int _currentDay;

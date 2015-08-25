@@ -6,9 +6,11 @@
 #include <Wire.h>
 #include <WiFiUdp.h>
 #include <Time.h>
+#include <SimpleTimer.h>
 
 #define TIME_ZONE_ADJUSTMENT 5
 LiquidTWI2 lcd(0x20);
+SimpleTimer refreshDisplayTimer;
 
 char blynkAuthCode[] = "ca8de794d7534659b2b4b5c995333f3a";
 LightMatrixManager matrix;
@@ -64,28 +66,6 @@ void getTime()
   // subtract seventy years:
   unsigned long epoch = secsSince1900 - seventyYears;
   setTime(epoch);
-  // print Unix time:
-  lcd.clear();
-  lcd.setCursor(0,0);
-    lcd.print("H: ");
-    lcd.print(hour());
-    lcd.print("  D: ");
-    lcd.print(weekday());
-  // print the hour, minute and second:
-  //  Serial.print("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
-  //  Serial.print((epoch  % 86400L) / 3600); // print the hour (86400 equals secs per day)
-  //  Serial.print(':');
-  //  if ( ((epoch % 3600) / 60) < 10 ) {
-  //    // In the first 10 minutes of each hour, we'll want a leading '0'
-  //    Serial.print('0');
-  //  }
-  //  Serial.print((epoch  % 3600) / 60); // print the minute (3600 equals secs per minute)
-  //  Serial.print(':');
-  //  if ( (epoch % 60) < 10 ) {
-  //    // In the first 10 seconds of each minute, we'll want a leading '0'
-  //    Serial.print('0');
-  //  }
-  //  Serial.println(epoch % 60); // print the second
 }
 
 void initializeLCD()
@@ -127,6 +107,21 @@ void setup() {
   initializeBlynk();
   getTime();
   initializeMatrix();
+  refreshDisplayTimer.setInterval(10000,updateCursorBasedOnTime);
+}
+
+void updateCursorBasedOnTime()
+{
+  if ((matrix.getDay() != weekday()) && (matrix.currentHour != hour()-TIME_ZONE_ADJUSTMENT))
+  {
+    matrix.refreshDisplay();
+  }
+  lcd.clear();
+  lcd.print(hour()-TIME_ZONE_ADJUSTMENT);
+  lcd.print(":");
+  lcd.print(minute());
+  lcd.print(":");
+  lcd.print(second());
 }
 
 BLYNK_WRITE(5) // Increment Day
@@ -159,6 +154,7 @@ BLYNK_WRITE(9) // Allocate at current location
 void loop() {
 
   Blynk.run();
+  refreshDisplayTimer.run();
 }
 
 unsigned long sendNTPpacket(IPAddress& address)

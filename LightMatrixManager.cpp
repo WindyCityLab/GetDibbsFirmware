@@ -155,4 +155,8 @@ void LightMatrixManager::decrementWeek()
     currentWeek = MAX_WEEKS - 1;
   }
 }
+int LightMatrixManager::getDay()
+{
+  return _currentDay;
+}
 
