@@ -157,6 +157,10 @@ void LightMatrixManager::decrementWeek()
 }
 int LightMatrixManager::getDay()
 {
-  return _currentDay;
+  if (_currentDay == 6)
+  {
+    return 1;
+  }
+  return _currentDay + 2;
 }
 

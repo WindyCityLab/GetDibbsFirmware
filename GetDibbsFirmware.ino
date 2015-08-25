@@ -117,6 +117,8 @@ void updateCursorBasedOnTime()
     matrix.refreshDisplay();
   }
   lcd.clear();
+  lcd.print(matrix.getDay());
+  lcd.print(":");
   lcd.print(hour()-TIME_ZONE_ADJUSTMENT);
   lcd.print(":");
   lcd.print(minute());
