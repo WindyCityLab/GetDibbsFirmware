@@ -5,13 +5,13 @@
 #include <LiquidTWI2.h>
 #include <Wire.h>
 #include <WiFiUdp.h>
+#include <Time.h>
 
+#define TIME_ZONE_ADJUSTMENT 5
 LiquidTWI2 lcd(0x20);
 
 char blynkAuthCode[] = "ca8de794d7534659b2b4b5c995333f3a";
 LightMatrixManager matrix;
-
-//uint8_t hour, week, day;
 
 unsigned int localPort = 2390;
 IPAddress timeServerIP; // time.nist.gov NTP server address
@@ -28,19 +28,22 @@ void getTime()
   //get a random server from the pool
   WiFi.hostByName(ntpServerName, timeServerIP);
 
-  lcd.print(timeServerIP);
+  //lcd.print(timeServerIP);
 
   sendNTPpacket(timeServerIP); // send an NTP packet to a time server
   // wait to see if a reply is available
 
+  delay(1000);
+  
   int cb = udp.parsePacket();
   while (!cb) {
     lcd.print("no packet yet");
     Blynk.run();
+    delay(1000);
     cb = udp.parsePacket();
   }
-  lcd.print("packet received, length=");
-  lcd.println(cb);
+//  lcd.print("packet received, length=");
+//  lcd.println(cb);
   // We've received a packet, read the data from it
   udp.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
 
@@ -54,17 +57,20 @@ void getTime()
   unsigned long secsSince1900 = highWord << 16 | lowWord;
   //Serial.print("Seconds since Jan 1 1900 = " );
 
+  
   // now convert NTP time into everyday time:
   // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
   const unsigned long seventyYears = 2208988800UL;
   // subtract seventy years:
   unsigned long epoch = secsSince1900 - seventyYears;
+  setTime(epoch);
   // print Unix time:
   lcd.clear();
-  lcd.print(epoch);
-
-  //hour = (epoch  % 86400L) / 3600;
-  
+  lcd.setCursor(0,0);
+    lcd.print("H: ");
+    lcd.print(hour());
+    lcd.print("  D: ");
+    lcd.print(weekday());
   // print the hour, minute and second:
   //  Serial.print("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
   //  Serial.print((epoch  % 86400L) / 3600); // print the hour (86400 equals secs per day)
@@ -91,9 +97,9 @@ void initializeLCD()
 void initializeMatrix()
 {
   matrix.currentWeek = 0;
-  matrix.currentDay = 0; // Sunday
-  matrix.currentHour = 7; // 7am
-  // matrix.displayCursor();
+  matrix.setDay(weekday());
+  matrix.currentHour = hour()-TIME_ZONE_ADJUSTMENT; // 7am
+  matrix.displayCursor();
 
   matrix.setClientColor(0x00, RgbColor(0, 0, 50));
   matrix.setClientColor(0x01, RgbColor(0, 50, 0));
@@ -119,7 +125,7 @@ void setup() {
   matrix.clearDisplay();
   initializeLCD();
   initializeBlynk();
- // getTime();
+  getTime();
   initializeMatrix();
 }
 

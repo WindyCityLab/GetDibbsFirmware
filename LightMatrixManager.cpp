@@ -15,6 +15,17 @@ LightMatrixManager::LightMatrixManager()
   }
 }
 
+void LightMatrixManager::setDay(int day)
+{
+  if (day == 1)
+  {
+    _currentDay = 6;
+  }
+  else
+  {
+    _currentDay = day - 2;
+  }
+}
 void LightMatrixManager::clearDisplay()
 {
   for (int i = 0; i < NUMPIXELS; i++)
@@ -28,7 +39,7 @@ void LightMatrixManager::begin(int pin)
   clearDisplay();
 }
 
-void LightMatrixManager::setPixel(int8_t day, int8_t hour, RgbColor color)
+void LightMatrixManager::setPixel(int day, int hour, RgbColor color)
 {
   uint8_t column = day + 1;
   uint8_t row = hour + 1;
@@ -40,15 +51,15 @@ void LightMatrixManager::displayCursor()
   clearDisplay();
 
   //Draw a horizontal line matching at the current Hour
-  for (int8_t d = -1; d < NUM_COLUMNS - 1; d++)
+  for (int d = -1; d < NUM_COLUMNS - 1; d++)
   {
     setPixel(d, currentHour - INITIAL_HOUR, CURSOR_COLOR);
   }
 
   //Draw a vertical line matching the current day
-  for (int8_t h = -1; h < NUM_ROWS - 1; h++)
+  for (int h = -1; h < NUM_ROWS - 1; h++)
   {
-    setPixel(currentDay, h, CURSOR_COLOR);
+    setPixel(_currentDay, h, CURSOR_COLOR);
   }
 }
 
@@ -79,29 +90,29 @@ void LightMatrixManager::allocateResource(uint8_t week, uint8_t day, uint8_t hou
 }
 void LightMatrixManager::allocateResource(uint8_t client)
 {
-  _reservation[currentWeek][currentDay][currentHour - INITIAL_HOUR] = client;
+  _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = client;
 }
 void LightMatrixManager::toggleAllocation(uint8_t client)
 {
-  if (_reservation[currentWeek][currentDay][currentHour - INITIAL_HOUR] == -1)
+  if (_reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] == -1)
   {
-    _reservation[currentWeek][currentDay][currentHour - INITIAL_HOUR] = client;
+    _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = client;
   }
   else
   {
-    if (client == _reservation[currentWeek][currentDay][currentHour - INITIAL_HOUR])
+    if (client == _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR])
     {
-      _reservation[currentWeek][currentDay][currentHour - INITIAL_HOUR] = -1;
+      _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = -1;
     }
   }
 }
 void LightMatrixManager::incrementDay()
 {
-  currentDay++;
-  if (currentDay > 6) // we start counting weeddays at 0
+  _currentDay++;
+  if (_currentDay > 6) // we start counting weeddays at 0
   {
     incrementWeek();
-    currentDay = 0;
+    _currentDay = 0;
   }
 }
 void LightMatrixManager::incrementHour()
@@ -120,10 +131,10 @@ void LightMatrixManager::incrementWeek()
 
 void LightMatrixManager::decrementDay()
 {
-  currentDay--;
-  if (currentDay < 0)
+  _currentDay--;
+  if (_currentDay < 0)
   {
-    currentDay = 6;
+    _currentDay = 6;
     decrementWeek();
   }
 }
