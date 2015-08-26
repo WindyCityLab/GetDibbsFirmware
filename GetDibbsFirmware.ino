@@ -1,6 +1,4 @@
 #include <NeoPixelBus.h>
-#include "LightMatrixManager.h"
-#include "LEDDisplayManager.h"
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 #include <LiquidTWI2.h>
@@ -8,6 +6,7 @@
 #include <WiFiUdp.h>
 #include <Time.h>
 #include <SimpleTimer.h>
+#include "LightMatrixManager.h"
 #include "Adafruit_LEDBackpack.h"
 #include "Adafruit_GFX.h"
 
