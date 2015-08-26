@@ -1,5 +1,6 @@
 #include <NeoPixelBus.h>
 #include "LightMatrixManager.h"
+#include "LEDDisplayManager.h"
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 #include <LiquidTWI2.h>
@@ -7,10 +8,14 @@
 #include <WiFiUdp.h>
 #include <Time.h>
 #include <SimpleTimer.h>
+#include "Adafruit_LEDBackpack.h"
+#include "Adafruit_GFX.h"
 
 #define TIME_ZONE_ADJUSTMENT 5
 LiquidTWI2 lcd(0x20);
 SimpleTimer refreshDisplayTimer;
+
+Adafruit_AlphaNum4 alpha4 = Adafruit_AlphaNum4();
 
 char blynkAuthCode[] = "ca8de794d7534659b2b4b5c995333f3a";
 LightMatrixManager matrix;
@@ -96,12 +101,81 @@ void initializeBlynk()
 {
   lcd.clear();
   lcd.print("Blynk Connecting...");
-  Blynk.begin(blynkAuthCode, "Catalyze Office", "perpetualimprovement");
+  Blynk.begin(blynkAuthCode, "Catalyze Office 2", "perpetualimprovement");
   lcd.clear();
   lcd.print("Connected!");
 }
+void display(int day)
+{
+  switch (day)
+  {
+    case 1 :
+    {
+      alpha4.writeDigitAscii(0,'S');
+      alpha4.writeDigitAscii(1,'u');
+      alpha4.writeDigitAscii(2,'n');
+      alpha4.writeDigitAscii(3,' ');
+      break;
+    }
+    case 2 :
+    {
+      alpha4.writeDigitAscii(0,'M');
+      alpha4.writeDigitAscii(1,'o');
+      alpha4.writeDigitAscii(2,'n');
+      alpha4.writeDigitAscii(3,' ');
+      break;
+    }
+    case 3 :
+    {
+      alpha4.writeDigitAscii(0,'T');
+      alpha4.writeDigitAscii(1,'u');
+      alpha4.writeDigitAscii(2,'e');
+      alpha4.writeDigitAscii(3,'s');
+      break;
+    }
+    case 4 :
+    {
+      alpha4.writeDigitAscii(0,'W');
+      alpha4.writeDigitAscii(1,'e');
+      alpha4.writeDigitAscii(2,'d');
+      alpha4.writeDigitAscii(3,'s');
+      break;
+    }
+    case 5 :
+    {
+      alpha4.writeDigitAscii(0,'T');
+      alpha4.writeDigitAscii(1,'h');
+      alpha4.writeDigitAscii(2,'u');
+      alpha4.writeDigitAscii(3,'r');
+      break;
+    }
+    case 6 :
+    {
+      alpha4.writeDigitAscii(0,'F');
+      alpha4.writeDigitAscii(1,'r');
+      alpha4.writeDigitAscii(2,'i');
+      alpha4.writeDigitAscii(3,' ');
+      break;
+    }
+    case 7 :
+    {
+      alpha4.writeDigitAscii(0,'S');
+      alpha4.writeDigitAscii(1,'a');
+      alpha4.writeDigitAscii(2,'t');
+      alpha4.writeDigitAscii(3,' ');
+      break;
+    }
+
+  }
+  alpha4.writeDisplay();
+}
+
 void setup() {
+  Serial.begin(9600);
   matrix.begin(2);
+  alpha4.begin(0x70);  // pass in the address
+  alpha4.clear();
+
   matrix.clearDisplay();
   initializeLCD();
   initializeBlynk();
@@ -130,6 +204,7 @@ BLYNK_WRITE(5) // Increment Day
 {
   matrix.incrementDay();
   matrix.refreshDisplay();
+  display(matrix.getDay());
 }
 
 BLYNK_WRITE(6) // Increment Hour
@@ -141,6 +216,7 @@ BLYNK_WRITE(7) // Decrement Day
 {
   matrix.decrementDay();
   matrix.refreshDisplay();
+  display(matrix.getDay());
 }
 BLYNK_WRITE(8) // Decrement Hour
 {
@@ -157,6 +233,11 @@ void loop() {
 
   Blynk.run();
   refreshDisplayTimer.run();
+
+  if (Serial.available())
+  {
+    lcd.print(Serial.read());
+  }
 }
 
 unsigned long sendNTPpacket(IPAddress& address)

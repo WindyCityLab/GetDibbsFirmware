@@ -37,6 +37,7 @@ void LightMatrixManager::begin(int pin)
 {
   _pixels.Begin();
   clearDisplay();
+  _pixels.Show();
 }
 
 void LightMatrixManager::setPixel(int day, int hour, RgbColor color)
@@ -51,16 +52,22 @@ void LightMatrixManager::displayCursor()
   clearDisplay();
 
   //Draw a horizontal line matching at the current Hour
-  for (int d = -1; d < NUM_COLUMNS - 1; d++)
-  {
-    setPixel(d, currentHour - INITIAL_HOUR, CURSOR_COLOR);
-  }
+  setPixel(-1, currentHour - INITIAL_HOUR, CURSOR_COLOR);
+  setPixel(_currentDay - 1, currentHour - INITIAL_HOUR, CURSOR_COLOR);
+  setPixel(_currentDay + 1, currentHour - INITIAL_HOUR, CURSOR_COLOR);
+//  for (int d = -1; d < NUM_COLUMNS - 1; d++)
+//  {
+//    setPixel(d, currentHour - INITIAL_HOUR, CURSOR_COLOR);
+//  }
 
-  //Draw a vertical line matching the current day
-  for (int h = -1; h < NUM_ROWS - 1; h++)
-  {
-    setPixel(_currentDay, h, CURSOR_COLOR);
-  }
+  setPixel(_currentDay, -1, CURSOR_COLOR);
+  setPixel(_currentDay, currentHour - INITIAL_HOUR - 1, CURSOR_COLOR);
+  setPixel(_currentDay, currentHour - INITIAL_HOUR + 1, CURSOR_COLOR);
+//  //Draw a vertical line matching the current day
+//  for (int h = -1; h < NUM_ROWS - 1; h++)
+//  {
+//    setPixel(_currentDay, h, CURSOR_COLOR);
+//  }
 }
 
 void LightMatrixManager::refreshDisplay()
