@@ -20,7 +20,8 @@ class LightMatrixManager
     LightMatrixManager();
     void begin(int pin);
     void clearDisplay();
-
+    void update();
+    
     int currentWeek, currentHour;
     void setClientColor(uint8_t clientID, RgbColor color);
     

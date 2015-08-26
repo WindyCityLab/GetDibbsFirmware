@@ -5,9 +5,23 @@ void displayHourNumber(int hour)
     hourDisplay.writeDigitAscii(0, ' ');
     hourDisplay.writeDigitAscii(1, hour + 48);
   }
+  else
+  {
+    hourDisplay.writeDigitAscii(0, '1');
+  }
+  hourDisplay.writeDigitAscii(1, (hour % 10) + 48);
+
 }
 void displayHour(int hour)
 {
+  if (hour > 12)
+  {
+    displayHourNumber(hour - 12);
+  }
+  else
+  {
+    displayHourNumber(hour);
+  }
   hourDisplay.writeDigitAscii(3, 'm');
   if (hour >= 12)
   {

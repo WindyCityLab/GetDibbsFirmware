@@ -40,6 +40,11 @@ void LightMatrixManager::begin(int pin)
   _pixels.Show();
 }
 
+void LightMatrixManager::update()
+{
+  _pixels.Show();
+}
+
 void LightMatrixManager::setPixel(int day, int hour, RgbColor color)
 {
   uint8_t column = day + 1;
