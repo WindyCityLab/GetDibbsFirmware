@@ -13,7 +13,7 @@ void getTime()
   
   int cb = udp.parsePacket();
   while (!cb) {
-    lcd.print("no packet yet");
+//    lcd.print("no packet yet");
     Blynk.run();
     delay(1000);
     cb = udp.parsePacket();

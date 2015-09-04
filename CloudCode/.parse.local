@@ -1,0 +1,10 @@
+{
+  "applications": {
+    "GetDibbs": {
+      "applicationId": "V5y9CHmlEF9n3wxITNogwnzvhr6TuPPwrPlY34pM"
+    },
+    "_default": {
+      "link": "GetDibbs"
+    }
+  }
+}
