@@ -23,11 +23,9 @@ class LightMatrixManager
     void update();
     
     int currentWeek, currentHour;
-    void setClientColor(uint8_t clientID, RgbColor color);
     
-    void allocateResource(uint8_t week, uint8_t day, uint8_t hour, uint8_t client);
-    void allocateResource(uint8_t client);
-    void toggleAllocation(uint8_t client);
+    void allocateResource(uint8_t week, uint8_t day, uint8_t hour, RgbColor color);
+    void allocateResource(RgbColor color);
     
     void displayCursor();
     void refreshDisplay();
@@ -45,8 +43,7 @@ class LightMatrixManager
   private:
     int _currentDay;
     NeoPixelBus _pixels = NeoPixelBus(NUMPIXELS,2);
-    int _reservation[MAX_WEEKS][NUM_COLUMNS][NUM_ROWS]; // Client number goes in the cell, color is looked up from there
-    RgbColor _clientColor[MAX_CLIENTS]; // Client colors
+    RgbColor _reservation[MAX_WEEKS][NUM_COLUMNS][NUM_ROWS];
     void setPixel(int day, int hour, RgbColor color);
 };
 

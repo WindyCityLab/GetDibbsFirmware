@@ -1,4 +1,5 @@
 var express = require('express');
+var moment = require('moment');
 var app = express();
 
 // var apiKey = "bbGEkMOjeHqYKacEuNU2XNksyx2u5muwP12XkAxS";
@@ -6,6 +7,27 @@ var app = express();
 
 app.get('/test', function (req, res) {
 	res.send('Hello World!');
+});
+
+app.get('/resourceName', function (req, res) {
+	var Resource = Parse.Object.extend("Resource");
+	var query = new Parse.Query(Resource);
+	query.equalTo("resourceID", req.param("resourceID"));
+	query.first({
+		success: function (results)
+		{
+			res.send('"' + results.get("name") + '"');
+		},
+		error: function (error)
+		{
+			console.log(error);
+			res.error(400).send({error: "Query Failed"});
+		}
+	})
+});
+
+app.get('/epochTime', function (req,res) {
+	res.send('"' + JSON.stringify(moment().valueOf()) + '"');
 });
 
 function getColor(forClient)
@@ -31,15 +53,19 @@ app.get('/reservations', function (req,res) {
     success: function (results)
     {
       var result = [];
+			result.push(results.length);
       for (var i = 0; i < results.length; i++)
       {
-        var items = {};
-        items["col"] = getColor(results[i].get("client"));
-//        items["cn"] = results[i].get("client").get("name");
-        items["rn"] = results[i].get("resource").get("name");
-        items["dow"] = results[i].get("date").getDay();
-        items["hr"] = results[i].get("date").getHours()-5;
-        result.push(items);
+				result.push(results[i].get("client").get("red"));
+				result.push(results[i].get("client").get("green"));
+				result.push(results[i].get("client").get("blue"));
+				var theDay = results[i].get("date").getDay();
+				if (theDay == 0)
+				{
+					theDay = 7
+				}
+				result.push(theDay);
+				result.push(results[i].get("date").getHours()-5);
       }
       res.send(JSON.stringify(result));
     },

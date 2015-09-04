@@ -9,7 +9,7 @@ LightMatrixManager::LightMatrixManager()
     {
       for (uint8_t hour = 0; hour < NUM_ROWS; hour++)
       {
-        _reservation[week][day][hour] = -1;
+        _reservation[week][day][hour] = RgbColor(0,0,0);
       }
     }
   }
@@ -54,70 +54,51 @@ void LightMatrixManager::setPixel(int day, int hour, RgbColor color)
 }
 void LightMatrixManager::displayCursor()
 {
-  clearDisplay();
-
   //Draw a horizontal line matching at the current Hour
   setPixel(-1, currentHour - INITIAL_HOUR, CURSOR_COLOR);
   setPixel(_currentDay - 1, currentHour - INITIAL_HOUR, CURSOR_COLOR);
   setPixel(_currentDay + 1, currentHour - INITIAL_HOUR, CURSOR_COLOR);
-//  for (int d = -1; d < NUM_COLUMNS - 1; d++)
-//  {
-//    setPixel(d, currentHour - INITIAL_HOUR, CURSOR_COLOR);
-//  }
 
   setPixel(_currentDay, -1, CURSOR_COLOR);
   setPixel(_currentDay, currentHour - INITIAL_HOUR - 1, CURSOR_COLOR);
   setPixel(_currentDay, currentHour - INITIAL_HOUR + 1, CURSOR_COLOR);
-//  //Draw a vertical line matching the current day
-//  for (int h = -1; h < NUM_ROWS - 1; h++)
-//  {
-//    setPixel(_currentDay, h, CURSOR_COLOR);
-//  }
 }
 
 void LightMatrixManager::refreshDisplay()
 {
   clearDisplay();
-  displayCursor();
   for (int day = 0; day < NUM_COLUMNS; day++)
   {
     for (int hour = 0; hour < NUM_ROWS; hour++)
     {
-      if (_reservation[currentWeek][day][hour] > -1)
-      {
-        int clientID = _reservation[currentWeek][day][hour];
-        setPixel(day, hour, _clientColor[clientID]);
-      }
+      setPixel(day, hour, _reservation[currentWeek][day][hour]);
     }
   }
+  displayCursor();
   _pixels.Show();
 }
-void LightMatrixManager::setClientColor(uint8_t clientID, RgbColor color)
+void LightMatrixManager::allocateResource(uint8_t week, uint8_t day, uint8_t hour, RgbColor color)
 {
-  _clientColor[clientID] = color;
+  _reservation[week][day][hour] = color;
 }
-void LightMatrixManager::allocateResource(uint8_t week, uint8_t day, uint8_t hour, uint8_t client)
+void LightMatrixManager::allocateResource(RgbColor color)
 {
-  _reservation[week][day][hour] = client;
+  _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = color;
 }
-void LightMatrixManager::allocateResource(uint8_t client)
-{
-  _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = client;
-}
-void LightMatrixManager::toggleAllocation(uint8_t client)
-{
-  if (_reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] == -1)
-  {
-    _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = client;
-  }
-  else
-  {
-    if (client == _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR])
-    {
-      _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = -1;
-    }
-  }
-}
+//void LightMatrixManager::toggleAllocation(int color)
+//{
+//  if (_reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] == -1)
+//  {
+//    _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = color;
+//  }
+//  else
+//  {
+//    if (color == _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR])
+//    {
+//      _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = -1;
+//    }
+//  }
+//}
 void LightMatrixManager::incrementDay()
 {
   _currentDay++;

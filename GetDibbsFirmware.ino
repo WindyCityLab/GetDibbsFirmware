@@ -1,16 +1,13 @@
 #include <NeoPixelBus.h>
 #include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266.h>
 #include <LiquidTWI2.h>
 #include <Wire.h>
-#include <WiFiUdp.h>
 #include <Time.h>
 #include <SimpleTimer.h>
 #include "LightMatrixManager.h"
 #include "Adafruit_LEDBackpack.h"
 #include "Adafruit_GFX.h"
 
-#define TIME_ZONE_ADJUSTMENT 5
 #define SSID "Catalyze Office 2"
 
 SimpleTimer refreshDisplayTimer;
@@ -18,18 +15,12 @@ SimpleTimer refreshDisplayTimer;
 Adafruit_AlphaNum4 dayDisplay = Adafruit_AlphaNum4();
 Adafruit_AlphaNum4 hourDisplay = Adafruit_AlphaNum4();
 
-char blynkAuthCode[] = "ca8de794d7534659b2b4b5c995333f3a";
 LightMatrixManager matrix;
 
-unsigned int localPort = 2390;
-IPAddress timeServerIP; // time.nist.gov NTP server address
-const char* ntpServerName = "time.nist.gov";
-const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message
-byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
-
-// A UDP instance to let us send and receive packets over UDP
-WiFiUDP udp;
-//LiquidTWI2 lcd(0x20);
+const char* ssid     = "Catalyze Office 2";
+const char* password = "perpetualimprovement";
+const char* host = "getdibbs.parseapp.com";
+const int httpPort = 80;
 
 //void initializeLCD()
 //{
@@ -38,115 +29,168 @@ WiFiUDP udp;
 //  lcd.print("GetDibbs V0.1");
 //  delay(1000);
 //}
-void initializeMatrix()
+
+void connectToTheInternet()
+{
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connected");  
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  
+}
+void displayCursorOnMatrix()
 {
   matrix.currentWeek = 0;
   matrix.setDay(weekday());
-  matrix.currentHour = hour()-TIME_ZONE_ADJUSTMENT; // 7am
+  matrix.currentHour = hour(); 
   matrix.displayCursor();
-
-  matrix.setClientColor(0x00, RgbColor(0, 0, 50));
-  matrix.setClientColor(0x01, RgbColor(0, 50, 0));
-  matrix.setClientColor(0x02, RgbColor(50, 0, 0));
-
-  matrix.allocateResource(0, 2, 7 - INITIAL_HOUR, 0x00);
-  matrix.allocateResource(0, 4, 9 - INITIAL_HOUR, 0x01);
-  matrix.allocateResource(0, 4, 11 - INITIAL_HOUR, 0x02);
-
   matrix.refreshDisplay();
 }
 
-void initializeBlynk()
+void getTime()
 {
-//  lcd.clear();
-//  lcd.print("Blynk Connecting...");
-//  lcd.setCursor(0,1);
-//  lcd.print(SSID);
-  Blynk.begin(blynkAuthCode, SSID, "perpetualimprovement");
-//  lcd.clear();
-//  lcd.print("Connected!");
+  WiFiClient client;
+  if (!client.connect(host, httpPort)) {
+    Serial.println("connection failed");
+  }
+  String url = "/epochTime";
+
+  Serial.print("Syncing Time...");
+  
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+               "Host: " + host + "\r\n" + 
+               "Connection: close\r\n\r\n");
+  delay(10);
+  while(!client.available()) {
+    delay(10);
+  }
+  Serial.println("completed.");
+  
+  String header = client.readStringUntil('"');
+  String epochString = client.readStringUntil('"');
+  uint64_t epoch = atof(epochString.c_str())/1000 - (5 * 3600);
+  setTime(epoch);
 }
 
-void setup() {
-  Serial.begin(9600);
-  Serial.println("Hello world!");
+void initializeLEDMatrixDisplay()
+{
+  Serial.println(F("Clearing 14 Segment Displays"));
   dayDisplay.begin(0x70);  // pass in the address
   dayDisplay.clear();
   dayDisplay.writeDisplay();
   
   hourDisplay.begin(0x71);  // pass in the address
   hourDisplay.clear();
-  hourDisplay.writeDisplay();
+  hourDisplay.writeDisplay();  
+}
+
+void getReservations()
+{
+  Serial.print(F("Retrieving reservations..."));
+  WiFiClient client;
+    if (!client.connect(host, httpPort)) {
+    Serial.println("connection failed");
+  }
+  String url = "/reservations?resourceID=001";
+
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+             "Host: " + host + "\r\n" + 
+             "Connection: close\r\n\r\n");
+
+  delay(10);
+  while(!client.available()) {
+    delay(10);
+  }
+  Serial.println("Completed!");
   
+  String skip = client.readStringUntil('[');
+  uint8_t count = client.readStringUntil(',').toInt();
+  for (int i=0; i<count; i++)
+  {
+    uint8_t red = client.readStringUntil(',').toInt();
+    uint8_t green = client.readStringUntil(',').toInt();
+    uint8_t blue = client.readStringUntil(',').toInt();
+    RgbColor color = RgbColor(red,green,blue);
+    uint8_t day = client.readStringUntil(',').toInt()-1;
+    uint8_t hour = client.readStringUntil(',').toInt();
+
+    matrix.allocateResource(0, day, hour, color);
+  }
+  matrix.refreshDisplay();
+}
+
+void setup() {
   matrix.begin(2);
   matrix.clearDisplay();
   matrix.update();
-  
+
+  initializeLEDMatrixDisplay();
+
+  Serial.begin(115200);
+  Serial.println("Hello GetDibbs!");
+  delay(100);
+  connectToTheInternet();
+   
  // initializeLCD();
-  
-  initializeBlynk();
+
   getTime();
+  displayCursorOnMatrix();
+  getReservations();
   
-  initializeMatrix();
-  refreshDisplayTimer.setInterval(2000,updateCursorBasedOnTime);
+  
+  refreshDisplayTimer.setInterval(60000,updateCursorBasedOnTime);
   displayDay(matrix.getDay());
   displayHour(matrix.currentHour);
 }
 
 void updateCursorBasedOnTime()
 {
-  if ((matrix.getDay() != weekday()) && (matrix.currentHour != hour()-TIME_ZONE_ADJUSTMENT))
-  {
-    matrix.refreshDisplay();
-  }
-//  lcd.clear();
-//  lcd.print(matrix.getDay());
-//  lcd.print(":");
-//  lcd.print(hour()-TIME_ZONE_ADJUSTMENT);
-//  lcd.print(":");
-//  lcd.print(minute());
-//  lcd.print(":");
-//  lcd.print(second());
+  displayCursorOnMatrix();
 }
 
-BLYNK_WRITE(5) // Increment Day
-{
-  matrix.incrementDay();
-  matrix.refreshDisplay();
-  displayDay(matrix.getDay());
-  displayHour(matrix.currentHour);
-}
-
-BLYNK_WRITE(6) // Increment Hour
-{
-  matrix.incrementHour();
-  matrix.refreshDisplay();
-  displayDay(matrix.getDay());
-  displayHour(matrix.currentHour);
-}
-BLYNK_WRITE(7) // Decrement Day
-{
-  matrix.decrementDay();
-  matrix.refreshDisplay();
-  displayDay(matrix.getDay());
-  displayHour(matrix.currentHour);
-}
-BLYNK_WRITE(8) // Decrement Hour
-{
-  matrix.decrementHour();
-  matrix.refreshDisplay();
-  displayDay(matrix.getDay());
-  displayHour(matrix.currentHour);
-}
-
-BLYNK_WRITE(9) // Allocate at current location
-{
-  matrix.toggleAllocation(0x00);
-  matrix.refreshDisplay();
-}
+//BLYNK_WRITE(5) // Increment Day
+//{
+//  matrix.incrementDay();
+//  matrix.refreshDisplay();
+//  displayDay(matrix.getDay());
+//  displayHour(matrix.currentHour);
+//}
+//
+//BLYNK_WRITE(6) // Increment Hour
+//{
+//  matrix.incrementHour();
+//  matrix.refreshDisplay();
+//  displayDay(matrix.getDay());
+//  displayHour(matrix.currentHour);
+//}
+//BLYNK_WRITE(7) // Decrement Day
+//{
+//  matrix.decrementDay();
+//  matrix.refreshDisplay();
+//  displayDay(matrix.getDay());
+//  displayHour(matrix.currentHour);
+//}
+//BLYNK_WRITE(8) // Decrement Hour
+//{
+//  matrix.decrementHour();
+//  matrix.refreshDisplay();
+//  displayDay(matrix.getDay());
+//  displayHour(matrix.currentHour);
+//}
+//
+//BLYNK_WRITE(9) // Allocate at current location
+//{
+//  matrix.toggleAllocation(0x00);
+//  matrix.refreshDisplay();
+//}
 void loop() {
 
-  Blynk.run();
   refreshDisplayTimer.run();
 
 //  if (Serial.available())
