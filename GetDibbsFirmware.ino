@@ -140,7 +140,7 @@ void setup() {
   matrix.setDay(weekday());
   getReservations();
   
-  refreshDisplayTimer.setInterval(60000,updateCursorBasedOnTime);
+  refreshDisplayTimer.setInterval(15000,updateCursorBasedOnTime);
   displayDay(matrix.getDay());
   displayHour(matrix.currentHour);
 }

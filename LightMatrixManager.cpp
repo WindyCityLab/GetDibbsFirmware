@@ -1,9 +1,9 @@
 #include "LightMatrixManager.h"
 #include "../NeoPixelBus/NeoPixelBus.h"
 
-LightMatrixManager::LightMatrixManager()
+void LightMatrixManager::clearReservationsMappedToPixels()
 {
-  for (uint8_t week = 0; week < MAX_WEEKS; week++)
+    for (uint8_t week = 0; week < MAX_WEEKS; week++)
   {
     for (uint8_t day = 0; day < NUM_COLUMNS; day++)
     {
@@ -13,6 +13,10 @@ LightMatrixManager::LightMatrixManager()
       }
     }
   }
+}
+LightMatrixManager::LightMatrixManager()
+{
+  clearReservationsMappedToPixels();
 }
 
 void LightMatrixManager::setDay(int day)
@@ -68,6 +72,14 @@ void LightMatrixManager::displayCursor()
 void LightMatrixManager::refreshDisplay()
 {
   clearDisplay();
+  clearReservationsMappedToPixels();
+  for (int i=0; i<NUM_COLUMNS * NUM_ROWS; i++)
+  {
+    if (_reservations[i].allocated)
+    {
+      _reservation[currentWeek][_reservations[i].day][_reservations[i].hour] = _reservations[i].color;
+    }
+  }
   for (int day = 0; day < NUM_COLUMNS; day++)
   {
     for (int hour = 0; hour < NUM_ROWS; hour++)

@@ -54,6 +54,7 @@ class LightMatrixManager
     NeoPixelBus _pixels = NeoPixelBus(NUMPIXELS,2);
     RgbColor _reservation[MAX_WEEKS][NUM_COLUMNS][NUM_ROWS];
     void setPixel(int day, int hour, RgbColor color);
+    void clearReservationsMappedToPixels();
 };
 
 #endif

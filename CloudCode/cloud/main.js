@@ -65,7 +65,7 @@ app.get('/reservations', function (req,res) {
 					theDay = 7
 				}
 				result.push(theDay);
-				result.push(results[i].get("date").getHours()-5);
+				result.push(results[i].get("date").getHours()-7);
       }
       res.send(JSON.stringify(result));
     },
