@@ -44,14 +44,6 @@ void connectToTheInternet()
   Serial.println(WiFi.localIP());
   
 }
-void displayCursorOnMatrix()
-{
-  matrix.currentWeek = 0;
-  matrix.setDay(weekday());
-  matrix.currentHour = hour(); 
-  matrix.displayCursor();
-  matrix.refreshDisplay();
-}
 
 void getTime()
 {
@@ -76,9 +68,12 @@ void getTime()
   String epochString = client.readStringUntil('"');
   uint64_t epoch = atof(epochString.c_str())/1000 - (5 * 3600);
   setTime(epoch);
+  Serial.print("Hour: "); Serial.println(hour());
+  Serial.print("Minute: "); Serial.println(minute());
+  Serial.print("Day: "); Serial.println(weekday());
 }
 
-void initializeLEDMatrixDisplay()
+void initialize14SegmentDisplay()
 {
   Serial.println(F("Clearing 14 Segment Displays"));
   dayDisplay.begin(0x70);  // pass in the address
@@ -92,6 +87,7 @@ void initializeLEDMatrixDisplay()
 
 void getReservations()
 {
+  matrix.clearAllReservations();
   Serial.print(F("Retrieving reservations..."));
   WiFiClient client;
     if (!client.connect(host, httpPort)) {
@@ -130,7 +126,7 @@ void setup() {
   matrix.clearDisplay();
   matrix.update();
 
-  initializeLEDMatrixDisplay();
+  initialize14SegmentDisplay();
 
   Serial.begin(115200);
   Serial.println("Hello GetDibbs!");
@@ -140,9 +136,9 @@ void setup() {
  // initializeLCD();
 
   getTime();
-  displayCursorOnMatrix();
+  matrix.currentHour = hour();
+  matrix.setDay(weekday());
   getReservations();
-  
   
   refreshDisplayTimer.setInterval(60000,updateCursorBasedOnTime);
   displayDay(matrix.getDay());
@@ -151,7 +147,12 @@ void setup() {
 
 void updateCursorBasedOnTime()
 {
-  displayCursorOnMatrix();
+  getReservations();
+  displayDay(matrix.getDay());
+  matrix.currentHour = hour();
+  matrix.refreshDisplay();
+//  displayCursorOnMatrix();
+  displayHour(matrix.currentHour);
 }
 
 //BLYNK_WRITE(5) // Increment Day

@@ -52,6 +52,7 @@ void LightMatrixManager::setPixel(int day, int hour, RgbColor color)
   uint8_t pixel = row * NUM_COLUMNS + column;
   _pixels.SetPixelColor(pixel, color);
 }
+
 void LightMatrixManager::displayCursor()
 {
   //Draw a horizontal line matching at the current Hour
@@ -79,12 +80,29 @@ void LightMatrixManager::refreshDisplay()
 }
 void LightMatrixManager::allocateResource(uint8_t week, uint8_t day, uint8_t hour, RgbColor color)
 {
-  _reservation[week][day][hour] = color;
+  for (int i=0; i<NUM_ROWS * NUM_COLUMNS; i++)
+  {
+    if (!_reservations[i].allocated)
+    {
+      _reservations[i].allocated = true;
+      _reservations[i].color = color;
+      _reservations[i].day = day;
+      _reservations[i].hour = hour;
+      break;
+    }
+  }
 }
-void LightMatrixManager::allocateResource(RgbColor color)
+void LightMatrixManager::clearAllReservations()
 {
-  _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = color;
+  for (int i=0; i<NUM_ROWS * NUM_COLUMNS; i++)
+  {
+    _reservations[i].allocated = false;
+  }
 }
+//void LightMatrixManager::allocateResource(RgbColor color)
+//{
+//  _reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] = color;
+//}
 //void LightMatrixManager::toggleAllocation(int color)
 //{
 //  if (_reservation[currentWeek][_currentDay][currentHour - INITIAL_HOUR] == -1)

@@ -14,6 +14,14 @@
 
 #define CURSOR_COLOR RgbColor(50,50,50)
 
+typedef struct 
+{
+  RgbColor color;
+  boolean allocated;
+  uint8_t day;
+  uint8_t hour;
+} Reservation;
+
 class LightMatrixManager
 {
   public:
@@ -23,9 +31,9 @@ class LightMatrixManager
     void update();
     
     int currentWeek, currentHour;
-    
+
+    void clearAllReservations();
     void allocateResource(uint8_t week, uint8_t day, uint8_t hour, RgbColor color);
-    void allocateResource(RgbColor color);
     
     void displayCursor();
     void refreshDisplay();
@@ -42,6 +50,7 @@ class LightMatrixManager
     
   private:
     int _currentDay;
+    Reservation _reservations[NUM_COLUMNS * NUM_ROWS];
     NeoPixelBus _pixels = NeoPixelBus(NUMPIXELS,2);
     RgbColor _reservation[MAX_WEEKS][NUM_COLUMNS][NUM_ROWS];
     void setPixel(int day, int hour, RgbColor color);
