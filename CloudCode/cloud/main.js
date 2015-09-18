@@ -1,12 +1,60 @@
+
+var Stripe = require('stripe');
 var express = require('express');
 var moment = require('moment');
 var app = express();
+Stripe.initialize('sk_test_4zoxCh6615WAFMEp2P95lpHB');
 
 // var apiKey = "bbGEkMOjeHqYKacEuNU2XNksyx2u5muwP12XkAxS";
 // app.use(express.bodyParser());
-
-app.get('/test', function (req, res) {
-	res.send('Hello World!');
+Parse.Cloud.define("chargeCard", function (request,response) {
+	console.log("calling charges create");
+	Stripe.Charges.create({
+		amount : request.params.amount,
+		currency : request.params.currency,
+		card : request.params.stripeToken
+	},
+{
+	success : function(httpResponse) {
+		console.log("purchase made");
+		response.success("Purchase made!");
+	},
+	error : function(httpResponse) {
+		response.error();
+	}
+});
+});
+Parse.Cloud.define("charge", function(request, response) {
+	console.log("calling customer create");
+  Stripe.Customers.create({
+    card: request.params.stripeTokenID,
+    description: request.params.description
+  },{
+    success: function(results) {
+			console.log("create successful");
+      response.success(results);
+    },
+    error: function(httpResponse) {
+			console.log("create failed");
+      response.error(httpResponse);
+    }
+  }).then(function(customer){
+		console.log("calling charges create")
+    Stripe.Charges.create({
+      amount: request.params.amount, // in cents
+      currency: request.params.currency,
+      customer: customer.id
+    },{
+    success: function(results) {
+			console.log("calling charges successful");
+      response.success(results);
+    },
+    error: function(httpResponse) {
+			console.log("called charges failed");
+      response.error(httpResponse);
+    }
+  });
+  });
 });
 
 app.get('/resourceName', function (req, res) {
@@ -47,7 +95,8 @@ app.get('/reservations', function (req,res) {
   var query = new Parse.Query(Reservation);
   query.matchesQuery("resource",subQuery);
   query.greaterThan("date",(new Date));
-  query.include("client");
+  query.include("user");
+	query.include("user.employeeOf");
   query.include("resource");
   query.find({
     success: function (results)
@@ -56,9 +105,9 @@ app.get('/reservations', function (req,res) {
 			result.push(results.length);
       for (var i = 0; i < results.length; i++)
       {
-				result.push(results[i].get("client").get("red"));
-				result.push(results[i].get("client").get("green"));
-				result.push(results[i].get("client").get("blue"));
+				result.push(results[i].get("user").get("employeeOf").get("red"));
+				result.push(results[i].get("user").get("employeeOf").get("green"));
+				result.push(results[i].get("user").get("employeeOf").get("blue"));
 				var theDay = results[i].get("date").getDay();
 				if (theDay == 0)
 				{
@@ -74,26 +123,6 @@ app.get('/reservations', function (req,res) {
       res.status(400).send( {error : "Query Failed"});
     }
   })
-});
-
-app.get('/clients', function (req, res) {
-  var Client = Parse.Object.extend('Client');
-  var query = new Parse.Query(Client);
-  query.select("blue","red","green","name");
-  query.equalTo("clientID",req.param('clientID'));
-  query.first({
-    success: function(results) {
-      var red = parseInt(results.get('red'));
-      var green = parseInt(results.get('green'));
-      var blue = parseInt(results.get('blue'));
-      var color = (red * (256 ^ 2)) + (green * 256) + blue;
-      res.send('{name=' + results.get('name') + ', color = ' + color + '}');
-      // res.send(results);
-    },
-    error : function (error) {
-      res.status(400).send( {error: "Query Failed"});
-    }
-  });
 });
 
 app.listen();

@@ -140,7 +140,7 @@ void setup() {
   matrix.setDay(weekday());
   getReservations();
   
-  refreshDisplayTimer.setInterval(15000,updateCursorBasedOnTime);
+  refreshDisplayTimer.setInterval(1000,updateCursorBasedOnTime);
   displayDay(matrix.getDay());
   displayHour(matrix.currentHour);
 }
@@ -148,11 +148,14 @@ void setup() {
 void updateCursorBasedOnTime()
 {
   getReservations();
-  displayDay(matrix.getDay());
+  matrix.setDay(weekday());
   matrix.currentHour = hour();
+
+  displayDay(matrix.getDay());
+  displayHour(matrix.currentHour);
+
   matrix.refreshDisplay();
 //  displayCursorOnMatrix();
-  displayHour(matrix.currentHour);
 }
 
 //BLYNK_WRITE(5) // Increment Day
