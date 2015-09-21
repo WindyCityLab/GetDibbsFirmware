@@ -24,37 +24,61 @@ Parse.Cloud.define("chargeCard", function (request,response) {
 	}
 });
 });
-Parse.Cloud.define("charge", function(request, response) {
-	console.log("calling customer create");
-  Stripe.Customers.create({
-    card: request.params.stripeTokenID,
-    description: request.params.description
-  },{
-    success: function(results) {
-			console.log("create successful");
-      response.success(results);
-    },
-    error: function(httpResponse) {
-			console.log("create failed");
-      response.error(httpResponse);
-    }
-  }).then(function(customer){
-		console.log("calling charges create")
-    Stripe.Charges.create({
-      amount: request.params.amount, // in cents
-      currency: request.params.currency,
-      customer: customer.id
-    },{
-    success: function(results) {
-			console.log("calling charges successful");
-      response.success(results);
-    },
-    error: function(httpResponse) {
-			console.log("called charges failed");
-      response.error(httpResponse);
-    }
-  });
-  });
+
+app.get('/test', function (req, res) {
+	var AUser = Parse.Object.extend("AUser");
+	var query = new Parse.Query(AUser);
+	query.equalTo("userID",req.param("userID"));
+	console.log("Performing Query with userID =" + req.param("userID"));
+	query.first( {
+		success : function (results) {
+			console.log("Successful Query for " + results.get("name"));
+		},
+		error : function (error) {
+			console.log("query error");
+		}
+	})
+});
+app.get('/reserve', function (req,res) {
+	var query = new Parse.Query(Parse.Object.extend("AUser"));
+	query.equalTo("userID",req.param("userID"));
+	console.log("Performing Query with userID =" + req.param("userID"));
+	query.first( {
+		success : function (results)
+		{
+			console.log("Successful Query for " + results.get("name"));
+			var aUser = results.get("user");
+			var query2 = new Parse.Query(Parse.Object.extend("Resource"));
+			query2.equalTo("resourceID",req.param("resourceID"));
+			query2.first( {
+				success : function (results2)
+				{
+					console.log("got resource = " + results2.get("name"));
+					var Reservation = Parse.Object.extend("Reservation");
+					var reservation = new Reservation();
+					reservation.set("user",results);
+					reservation.set("resource",results2);
+					var theDate = new Date(req.param("year"), req.param("month"), req.param("day"), req.param("hour"),req.param("minute"),0,0);
+					reservation.set("date",theDate);
+					console.log("date is " + theDate);
+					reservation.save(null, {
+						success : function (reservation) {
+							console.log("successfully saved new reserveration");
+						},
+						error : function (reservation, error) {
+							console.log(error.message);
+						}
+					});
+				},
+				error : function (error) {
+					console.log(error)
+				}
+			});
+		},
+		error : function (error) {
+			console.log("Query unsuccessful");
+		}
+	});
 });
 
 app.get('/resourceName', function (req, res) {
