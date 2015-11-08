@@ -8,7 +8,8 @@
 #include "Adafruit_LEDBackpack.h"
 #include "Adafruit_GFX.h"
 
-#define SSID "Catalyze Office 2"
+//#define SSID "Catalyze Office 2"
+//#define SSID "KevinMBP"
 
 SimpleTimer refreshDisplayTimer;
 
@@ -19,7 +20,10 @@ LightMatrixManager matrix;
 
 const char* ssid     = "Catalyze Office 2";
 const char* password = "perpetualimprovement";
-const char* host = "getdibbs.parseapp.com";
+//const char* ssid     = "KevinMBP";
+//const char* password = "";
+//const char* host = "getdibbs.parseapp.com";
+const char* host = "getdibbs.io";
 const int httpPort = 80;
 
 //void initializeLCD()
@@ -33,6 +37,7 @@ const int httpPort = 80;
 void connectToTheInternet()
 {
   WiFi.begin(ssid, password);
+ //  WiFi.begin(ssid);     
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");

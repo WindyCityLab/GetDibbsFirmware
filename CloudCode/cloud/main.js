@@ -1,44 +1,8 @@
 
-var Stripe = require('stripe');
 var express = require('express');
 var moment = require('moment');
 var app = express();
-Stripe.initialize('sk_test_4zoxCh6615WAFMEp2P95lpHB');
 
-// var apiKey = "bbGEkMOjeHqYKacEuNU2XNksyx2u5muwP12XkAxS";
-// app.use(express.bodyParser());
-Parse.Cloud.define("chargeCard", function (request,response) {
-	console.log("calling charges create");
-	Stripe.Charges.create({
-		amount : request.params.amount,
-		currency : request.params.currency,
-		card : request.params.stripeToken
-	},
-{
-	success : function(httpResponse) {
-		console.log("purchase made");
-		response.success("Purchase made!");
-	},
-	error : function(httpResponse) {
-		response.error();
-	}
-});
-});
-
-app.get('/test', function (req, res) {
-	var AUser = Parse.Object.extend("AUser");
-	var query = new Parse.Query(AUser);
-	query.equalTo("userID",req.param("userID"));
-	console.log("Performing Query with userID =" + req.param("userID"));
-	query.first( {
-		success : function (results) {
-			console.log("Successful Query for " + results.get("name"));
-		},
-		error : function (error) {
-			console.log("query error");
-		}
-	})
-});
 app.get('/reserve', function (req,res) {
 	var query = new Parse.Query(Parse.Object.extend("AUser"));
 	query.equalTo("userID",req.param("userID"));
@@ -118,7 +82,7 @@ app.get('/reservations', function (req,res) {
   subQuery.equalTo("resourceID", req.param("resourceID"));
   var query = new Parse.Query(Reservation);
   query.matchesQuery("resource",subQuery);
-  query.greaterThan("date",(new Date));
+//  query.greaterThan("date",(new Date));
   query.include("user");
 	query.include("user.employeeOf");
   query.include("resource");
@@ -132,13 +96,9 @@ app.get('/reservations', function (req,res) {
 				result.push(results[i].get("user").get("employeeOf").get("red"));
 				result.push(results[i].get("user").get("employeeOf").get("green"));
 				result.push(results[i].get("user").get("employeeOf").get("blue"));
-				var theDay = results[i].get("date").getDay();
-				if (theDay == 0)
-				{
-					theDay = 7
-				}
+				var theDay = results[i].get("date").getDay()+1;
 				result.push(theDay);
-				result.push(results[i].get("date").getHours()-7);
+				result.push(results[i].get("date").getHours());
       }
       res.send(JSON.stringify(result));
     },
