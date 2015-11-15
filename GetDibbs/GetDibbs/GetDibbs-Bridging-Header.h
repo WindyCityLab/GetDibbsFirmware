@@ -3,3 +3,6 @@
 //
 
 #import "Spark-SDK.h"
+#import "Parse.h"
+#import "ParseUI.h"
+#import "EstimoteSDK/EstimoteSDK.h"

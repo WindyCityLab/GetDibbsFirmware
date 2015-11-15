@@ -66,6 +66,23 @@ app.get('/epochTime', function (req,res) {
 	res.send('"' + JSON.stringify(moment().valueOf()) + '"');
 });
 
+function getSunday(d) {
+  d = new Date(d);
+  var day = d.getDay(),
+      diff = d.getDate() - day; // adjust when day is sunday
+  return new Date(d.setDate(diff));
+}
+function daysBetweenDates(d1, d2) {
+	return Math.round((d2-d1)/(1000*60*60*24));
+}
+
+app.get('/firstDayOfCurrentWeek', function (req,res) {
+	res.send(getSunday(new Date));
+})
+
+app.get('/daysToFirstSunday', function (req, res) {
+	res.send(daysBetweenDates(new Date, getSunday(new Date)));
+})
 function getColor(forClient)
 {
   var red = parseInt(forClient.get('red'));
@@ -79,10 +96,15 @@ app.get('/reservations', function (req,res) {
   var Resource = Parse.Object.extend("Resource");
 
   var subQuery = new Parse.Query(Resource);
-  subQuery.equalTo("resourceID", req.param("resourceID"));
+  subQuery.equalTo("resourceID", 1);
   var query = new Parse.Query(Reservation);
   query.matchesQuery("resource",subQuery);
-//  query.greaterThan("date",(new Date));
+	var firstSunday = getSunday(new Date);
+	console.log(firstSunday);
+  query.greaterThan("date",firstSunday);
+	var fortnightAway = new Date(firstSunday.getTime() + 14*24*60*60*1000);
+	console.log(fortnightAway);
+	query.lessThan("date",fortnightAway);
   query.include("user");
 	query.include("user.employeeOf");
   query.include("resource");
@@ -97,6 +119,12 @@ app.get('/reservations', function (req,res) {
 				result.push(results[i].get("user").get("employeeOf").get("green"));
 				result.push(results[i].get("user").get("employeeOf").get("blue"));
 				var theDay = results[i].get("date").getDay()+1;
+				var daysFromFirstSunday = daysBetweenDates(firstSunday,results[i].get("date"));
+				console.log(daysFromFirstSunday);
+				if (daysFromFirstSunday > 6)
+				{
+					theDay = theDay + 7;
+				}
 				result.push(theDay);
 				result.push(results[i].get("date").getHours());
       }
