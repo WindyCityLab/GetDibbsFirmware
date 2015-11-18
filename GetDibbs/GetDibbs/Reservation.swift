@@ -25,15 +25,27 @@ class Reservation: PFObject, PFSubclassing {
     
     class func dateFrom(week:Int, day:Int, hour:Int) -> NSDate
     {
+        let formatter = NSDateFormatter();
+        formatter.dateStyle = NSDateFormatterStyle.ShortStyle;
+        formatter.timeStyle = NSDateFormatterStyle.ShortStyle;
+        
         let comp = NSCalendar.currentCalendar().components([NSCalendarUnit.Year, NSCalendarUnit.Weekday, NSCalendarUnit.Month, NSCalendarUnit.Day, NSCalendarUnit.Hour], fromDate: NSDate())
         
-        comp.year = 2015  //TODO: Needs to be fixed but good enough for demo on wednesday
-        comp.weekday = 1
-        comp.day = day + comp.day - 1 + ((week % 2) * 7)
         comp.hour = hour - 6
+        let theDate = NSCalendar.currentCalendar().dateFromComponents(comp)!
+        print("thedate: \(formatter.stringFromDate(theDate))");
+        var offset = day - comp.weekday
+        if week > 0
+        {
+            offset = offset + 7;
+        }
+        let offsetComponents = NSDateComponents()
+        offsetComponents.day = offset
+        let reservationDate = NSCalendar.currentCalendar().dateByAddingUnit(NSCalendarUnit.Day, value: offset, toDate: theDate, options: NSCalendarOptions())!
         
-        let reservationDate = NSCalendar.currentCalendar().dateFromComponents(comp)
-        return reservationDate!
+        print("Date Calc says: \(reservationDate)")
+        print("Our time: \(formatter.stringFromDate(reservationDate))")
+        return reservationDate
     }
     
     class func makeReservation(theResource: Int, userID:Int, week:Int, day:Int, hour:Int, complete:(reservationCreated: ReservationAction, error : NSError!)-> Void)
@@ -64,7 +76,7 @@ class Reservation: PFObject, PFSubclassing {
                     {
                         let theReservation = reservation as! Reservation
                         print (theReservation.user.employeeOf.uniqueID)
-                        if theReservation.user.employeeOf.uniqueID == theResource
+                        if theReservation.user.employeeOf.uniqueID == userID
                         {
                             theReservation.deleteInBackground()
                             complete(reservationCreated: .Deleted, error: nil)

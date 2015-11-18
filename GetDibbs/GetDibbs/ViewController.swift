@@ -19,6 +19,7 @@ let commandFunction = "setCursor"
 let clientPresentFunction = "client"
 let kMatrixRefresh = "matrix"
 let kReserveEvent = "reserve"
+let kDelayBetweenMessages = 20 * NSEC_PER_SEC // seconds
 
 class ViewController: UIViewController, GetDibbsPanelDelegate, PFLogInViewControllerDelegate {
 
@@ -37,24 +38,24 @@ class ViewController: UIViewController, GetDibbsPanelDelegate, PFLogInViewContro
         if isCloseToPanel
         {
             proximityIndicator.backgroundColor = UIColor.blueColor()
-            AUser.companyUniqueID({ (values) -> Void in
-                self.conferencePanel?.callFunction(clientPresentFunction, withArguments: values, completion: { (number, error) -> Void in
-                    if let e = error
-                    {
-                        let ctrl = UIAlertController(title: "Error", message: e.localizedDescription, preferredStyle: UIAlertControllerStyle.Alert)
-                        let ok = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil)
-                        ctrl.addAction(ok)
-                        self.presentViewController(ctrl, animated: true, completion: nil)
-                    }
-                })
-            })
+//            AUser.companyUniqueID({ (values) -> Void in
+//                self.conferencePanel?.callFunction(clientPresentFunction, withArguments: values, completion: { (number, error) -> Void in
+//                    if let e = error
+//                    {
+//                        let ctrl = UIAlertController(title: "Error", message: e.localizedDescription, preferredStyle: UIAlertControllerStyle.Alert)
+//                        let ok = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil)
+//                        ctrl.addAction(ok)
+//                        self.presentViewController(ctrl, animated: true, completion: nil)
+//                    }
+//                })
+//            })
         }
         else
         {
             proximityIndicator.backgroundColor = UIColor.whiteColor()
-            self.conferencePanel?.callFunction(clientPresentFunction, withArguments: [0,0,0,0], completion: { (number, error) -> Void in
-                ()
-            })
+//            self.conferencePanel?.callFunction(clientPresentFunction, withArguments: [0,0,0,0], completion: { (number, error) -> Void in
+//                ()
+//            })
         }
     }
     
@@ -84,6 +85,16 @@ class ViewController: UIViewController, GetDibbsPanelDelegate, PFLogInViewContro
     func logInViewController(logInController: PFLogInViewController, didLogInUser user: PFUser) {
         loginVC.dismissViewControllerAnimated(true, completion: nil);
         self.assocaiteToGetDibbsPanel()
+    }
+
+    func sendWelcomeMessageAfterDelay(delay : UInt64)
+    {
+        dispatch_after(delay, dispatch_get_main_queue()) { () -> Void in
+            print("sending message!")
+            self.conferencePanel?.callFunction(kMatrixRefresh, withArguments: ["Welcome",PFUser.currentUser()!.username!], completion: { (number, ErrorType) -> Void in
+                ()
+            })
+        }
     }
 
     override func viewDidLoad() {
@@ -124,19 +135,23 @@ class ViewController: UIViewController, GetDibbsPanelDelegate, PFLogInViewContro
                 let result = theEvent.data as NSString
                 let items = result.componentsSeparatedByString(",")
                 Reservation.makeReservation(Int(items[0])!,userID:Int(items[1])!, week: Int(items[2])!, day: Int(items[3])!, hour: Int(items[4])!, complete: { (reservationCreated, error) -> Void in
+                    let theDate = Reservation.dateFrom(Int(items[2])!, day: Int(items[3])!, hour: Int(items[4])!)
+                    let formatter = NSDateFormatter();
+                    formatter.dateFormat = "E MM/dd @ haa"
+                    print(formatter.stringFromDate(theDate))
                     switch reservationCreated
                     {
                         case .Created:
-                            self.conferencePanel?.callFunction(kMatrixRefresh, withArguments: ["Created"], completion: { (number, error) -> Void in
-                                ()
+                            self.conferencePanel?.callFunction(kMatrixRefresh, withArguments: ["Created", formatter.stringFromDate(theDate)], completion: { (number, error) -> Void in
+                                self.sendWelcomeMessageAfterDelay(kDelayBetweenMessages)
                             })
                         case .Deleted:
-                            self.conferencePanel?.callFunction(kMatrixRefresh, withArguments: ["Deleted"], completion: { (number, error) -> Void in
-                                ()
+                            self.conferencePanel?.callFunction(kMatrixRefresh, withArguments: ["Deleted", formatter.stringFromDate(theDate)], completion: { (number, error) -> Void in
+                                self.sendWelcomeMessageAfterDelay(kDelayBetweenMessages)
                             })
                         case .Denied:
-                            self.conferencePanel?.callFunction(kMatrixRefresh, withArguments: ["Denied!"], completion: { (number, error) -> Void in
-                                ()
+                            self.conferencePanel?.callFunction(kMatrixRefresh, withArguments: ["Denied!","Already reserved"], completion: { (number, error) -> Void in
+                                self.sendWelcomeMessageAfterDelay(kDelayBetweenMessages)
                             })
                     }
                 })
@@ -151,12 +166,19 @@ class ViewController: UIViewController, GetDibbsPanelDelegate, PFLogInViewContro
                 self.conferencePanel?.callFunction(clientPresentFunction, withArguments: value, completion: { (number, error ) -> Void in
                 })
             })
+            let name = PFUser.currentUser()!.username!
+            conferencePanel?.callFunction(kMatrixRefresh, withArguments: ["Welcome",name], completion: { (number, error) -> Void in
+                ()
+            })
         }
         else
         {
             AUser.companyUniqueID({ (value) -> Void in
                 self.conferencePanel?.callFunction(clientPresentFunction, withArguments: [0,0,0,0], completion: { (number, error ) -> Void in
                 })
+            })
+            conferencePanel?.callFunction(kMatrixRefresh, withArguments: ["GetDibbs 0.5","Conf: 101"], completion: { (number, error) -> Void in
+                ()
             })
         }
     }

@@ -115,18 +115,22 @@ app.get('/reservations', function (req,res) {
 			result.push(results.length);
       for (var i = 0; i < results.length; i++)
       {
+				var theDate = results[i].get("date");
+				theDate.setHours(theDate.getHours() - 6);
+//				result.push(theDate);
 				result.push(results[i].get("user").get("employeeOf").get("red"));
 				result.push(results[i].get("user").get("employeeOf").get("green"));
 				result.push(results[i].get("user").get("employeeOf").get("blue"));
-				var theDay = results[i].get("date").getDay()+1;
-				var daysFromFirstSunday = daysBetweenDates(firstSunday,results[i].get("date"));
+				var theDay = theDate.getDay()+1; // We assume Sunday to be 1 not 0 like javascript
+				var daysFromFirstSunday = daysBetweenDates(firstSunday,theDate);
 				console.log(daysFromFirstSunday);
 				if (daysFromFirstSunday > 6)
 				{
 					theDay = theDay + 7;
 				}
 				result.push(theDay);
-				result.push(results[i].get("date").getHours());
+				result.push(theDate.getHours() + 6);
+				result.push(results[i].get("user").get("employeeOf").get("uniqueID"));
       }
       res.send(JSON.stringify(result));
     },
